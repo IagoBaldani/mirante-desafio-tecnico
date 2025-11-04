@@ -1,0 +1,302 @@
+openapi: 3.0.3
+info:
+  title: API de Eventos
+  version: "1.0.0"
+  description: |
+    API para gerenciamento de eventos.
+    - Paginação via query params `page` (base 0) e `size`.
+    - `DELETE /api/events/{id}` realiza **soft delete** (marca como removido, sem exclusão física).
+servers:
+  - url: https://api.exemplo.com
+    description: Produção
+  - url: http://localhost:8080
+    description: Desenvolvimento
+
+tags:
+  - name: Events
+    description: Operações relacionadas à entidade Evento
+
+paths:
+  /api/events:
+    get:
+      tags: [Events]
+      summary: Lista eventos com paginação
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Lista paginada de eventos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEventsRepresentation'
+              examples:
+                exemplo:
+                  value:
+                    content:
+                      - id: 1
+                        titulo: "Meetup de Tecnologia"
+                        descricao: "Encontro mensal para entusiastas de tecnologia."
+                        dataHora: "2025-11-20T19:30:00"
+                        local: "Av. Brasil, 1000 - Londrina/PR"
+                      - id: 2
+                        titulo: "Workshop de Fotografia"
+                        descricao: "Técnicas básicas e avançadas."
+                        dataHora: "2025-12-05T13:00:00"
+                        local: "Rua das Flores, 200 - Londrina/PR"
+                    page: 0
+                    size: 2
+                    totalPages: 5
+                    totalElements: 10
+    post:
+      tags: [Events]
+      summary: Cria um novo evento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRequestRepresentation'
+            examples:
+              exemplo:
+                value:
+                  titulo: "Lançamento de Produto"
+                  descricao: "Apresentação oficial do novo app."
+                  dataHora: "2025-11-25T18:00:00"
+                  local: "Teatro Municipal"
+      responses:
+        '201':
+          description: Evento criado
+          headers:
+            Location:
+              description: URL do recurso recém-criado
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponseRepresentation'
+        '400':
+          description: Requisição inválida (erros de validação)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRepresentation'
+
+  /api/events/{id}:
+    get:
+      tags: [Events]
+      summary: Obtém detalhes de um evento
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '200':
+          description: Detalhes do evento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponseRepresentation'
+              examples:
+                exemplo:
+                  value:
+                    id: 42
+                    titulo: "Seminário de Marketing de Influência"
+                    descricao: "Estratégias e cases do mercado."
+                    dataHora: "2025-11-30T14:00:00"
+                    local: "Centro de Convenções"
+        '404':
+          description: Evento não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRepresentation'
+    put:
+      tags: [Events]
+      summary: Atualiza um evento existente
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRequestRepresentation'
+            examples:
+              exemplo:
+                value:
+                  titulo: "Seminário de Marketing (Atualizado)"
+                  descricao: "Agenda revisada e novos palestrantes."
+                  dataHora: "2025-12-01T14:00:00"
+                  local: "Centro de Convenções - Auditório B"
+      responses:
+        '200':
+          description: Evento atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponseRepresentation'
+        '400':
+          description: Requisição inválida (erros de validação)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRepresentation'
+        '404':
+          description: Evento não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRepresentation'
+    delete:
+      tags: [Events]
+      summary: Remove (soft delete) um evento
+      description: |
+        Marca o evento como removido (soft delete). Implementação típica:
+        - Persistir flag/instantâneo de remoção e ocultar de listagens futuras.
+      parameters:
+        - $ref: '#/components/parameters/IdPathParam'
+      responses:
+        '204':
+          description: Removido com sucesso (sem conteúdo)
+        '404':
+          description: Evento não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRepresentation'
+
+components:
+  parameters:
+    IdPathParam:
+      name: id
+      in: path
+      required: true
+      description: Identificador numérico do evento
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    PageParam:
+      name: page
+      in: query
+      required: false
+      description: Índice da página (base 0). Default 0.
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    SizeParam:
+      name: size
+      in: query
+      required: false
+      description: Tamanho da página. Default 10. Máximo 100.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+
+  schemas:
+    EventResponseRepresentation:
+      type: object
+      description: Representa um evento.
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: ID numérico auto-incremental
+        titulo:
+          type: string
+          maxLength: 100
+        descricao:
+          type: string
+          maxLength: 1000
+        dataHora:
+          type: string
+          format: date-time
+          description: Data e hora do evento
+        local:
+          type: string
+          maxLength: 200
+      required:
+        - id
+        - titulo
+        - dataHora
+        - local
+
+    EventRequestRepresentation:
+      type: object
+      description: Payload para criar/alterar um evento.
+      properties:
+        titulo:
+          type: string
+          maxLength: 100
+        descricao:
+          type: string
+          maxLength: 1000
+        dataHora:
+          type: string
+          format: date-time
+        local:
+          type: string
+          maxLength: 200
+      required:
+        - titulo
+        - dataHora
+        - local
+      additionalProperties: false
+
+    PaginatedEventsRepresentation:
+      type: object
+      description: Resposta paginada para listagem de eventos.
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventResponseRepresentation'
+        page:
+          type: integer
+          minimum: 0
+          description: Índice da página atual (base 0)
+        size:
+          type: integer
+          minimum: 1
+          description: Tamanho da página retornada
+        totalPages:
+          type: integer
+          minimum: 0
+        totalElements:
+          type: integer
+          format: int64
+      required:
+        - content
+        - page
+        - size
+
+        - totalPages
+        - totalElements
+
+    ErrorRepresentation:
+      type: object
+      description: Estrutura padrão de erro
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          description: Código HTTP
+        error:
+          type: string
+          description: Título do erro
+        message:
+          type: string
+          description: Mensagem detalhada
+        path:
+          type: string
+          description: Caminho da requisição
+      required:
+        - status
+        - error
