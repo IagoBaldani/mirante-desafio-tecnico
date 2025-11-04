@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-events-table
+      author: iago.baldani
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            tableExists:
+              tableName: events
+      changes:
+        - createTable:
+            tableName: events
+            remarks: Tabela de eventos (soft delete via coluna 'ativo')
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: titulo
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descricao
+                  type: VARCHAR(1000)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: data_hora
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: local
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ativo
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: events

@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-seed-events
+      author: iago.baldani
+      context: dev
+      changes:
+        - insert:
+            tableName: events
+            columns:
+              - column: { name: titulo, value: "Meetup de Tecnologia" }
+              - column: { name: descricao, value: "Encontro mensal para entusiastas de tecnologia." }
+              - column: { name: data_hora, valueDate: "2025-11-20T19:30:00" }
+              - column: { name: local, value: "Av. Brasil, 1000 - Londrina/PR" }
+              - column: { name: ativo, valueBoolean: true }
+        - insert:
+            tableName: events
+            columns:
+              - column: { name: titulo, value: "Workshop de Fotografia" }
+              - column: { name: descricao, value: "Técnicas básicas e avançadas." }
+              - column: { name: data_hora, valueDate: "2025-12-05T18:00:00" }
+              - column: { name: local, value: "Rua das Flores, 200 - Londrina/PR" }
+              - column: { name: ativo, valueBoolean: true }
+      rollback:
+        - delete:
+            tableName: events
+            where: "titulo in ('Meetup de Tecnologia','Workshop de Fotografia')"

@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: classpath:db/changelog/001-create-events-table.yaml
+  - include:
+      file: classpath:db/changelog/002-indexes.yaml
+  - include:
+      file: classpath:db/changelog/003-seed-events.yaml
