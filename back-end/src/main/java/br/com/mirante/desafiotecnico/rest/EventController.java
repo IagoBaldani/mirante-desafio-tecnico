@@ -9,11 +9,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import java.net.URI;
 
 import static br.com.mirante.desafiotecnico.rest.RestExceptionHandler.notFound;
 
@@ -49,17 +47,11 @@ public class EventController {
 
     // POST /api/events
     @PostMapping
-    public ResponseEntity<EventResponseRepresentation> create(@Valid @RequestBody EventRequestRepresentation request) {
+    public ResponseEntity<?> create(@Valid @RequestBody EventRequestRepresentation request) {
         log.info(".: POST - /api/events/");
         EventResponseRepresentation response = service.create(request);
 
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(response.id())
-                .toUri();
-
-        return ResponseEntity.created(location).body(response);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     // PUT /api/events/{id}
